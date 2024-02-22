@@ -1,1 +1,1 @@
-# jupiter-notebook-playground
+# langchain-playground
