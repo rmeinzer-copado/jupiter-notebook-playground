@@ -21,15 +21,15 @@ docs = text_splitter.split_documents(documents)
 
 embeddings = OpenAIEmbeddings()
 
-# # Neo4jVector Module will connect to Neo4j and create a vector (ToDo - and keyword?) index if needed
+# Neo4jVector Module will connect to Neo4j and create a vector and keyword (ToDo - find keyword index) indices if needed
 # db = Neo4jVector.from_documents(
 #     docs,
 #     OpenAIEmbeddings(),
 #     url=url,
 #     username=username,
 #     password=password,
-#     # below is optional
-#     search_type="hybrid", 
+#     # below is optional to create and to use keyword index
+#     search_type="hybrid",
 # )
 
 index_name = "vector"  # default index name
@@ -47,10 +47,27 @@ store = Neo4jVector.from_existing_index(
 )
 
 query = "What did the president say about Ketanji Brown Jackson"
-docs_with_score = store.similarity_search_with_score(query, k=2) # find two most similar docs
+# docs_with_score = store.similarity_search_with_score(query, k=2) # find two most similar docs
 
-for doc, score in docs_with_score:
-    print("-" * 50)
-    print("Score: ", score)
-    print(doc.page_content)
-    print("-" * 50)
+# for doc, score in docs_with_score:
+#     print("-" * 50)
+#     print("Score: ", score)
+#     print(doc.page_content)
+#     print("-" * 50)
+
+# create retriever to use with GPT for Q&A over an index
+retriever = store.as_retriever()
+retriever.get_relevant_documents(query)[0]
+
+from langchain.chains import RetrievalQAWithSourcesChain
+from langchain_openai import ChatOpenAI
+
+# stuff top-doc into prompt for GPT
+chain = RetrievalQAWithSourcesChain.from_chain_type(
+    ChatOpenAI(temperature=0), chain_type="stuff", retriever=retriever
+)
+
+print(chain(
+    {"question": "What did the president say about Ketanji Brown Jackson"},
+    return_only_outputs=True,
+))
