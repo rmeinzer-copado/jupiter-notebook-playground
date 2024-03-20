@@ -43,3 +43,5 @@ print(chain.run("Which university did Warren Buffett attend?"))
 
 # > Finished chain.
 # Warren Buffett attended Columbia Business School.
+
+# print(graph.schema)
